@@ -71,8 +71,11 @@ follow these steps.
   - Mac (Homebrew):
     brew install sbt
   - Ubuntu/Debian:
+    ```sh
     sudo apt-get update
     sudo apt-get install sbt
+    ```
+    If those fail then visit [sbt's reference manual](https://www.scala-sbt.org/1.x/docs/Installing-sbt-on-Linux.html#Ubuntu+and+other+Debian-based+distributions) or the linux tab on [sbt's download page](https://www.scala-sbt.org/download). There you will find the necessary commands to manually add the official SBT repository to your system's package manager (`apt`).
   - Windows:
     Download from https://www.scala-sbt.org/download.html
   - Verify installation:

@@ -39,6 +39,7 @@ This application is built using modern Scala backend practices:
 
 ## 📂 Project Structure
 
+```
 modules/
 │
 ├── application      # Main ZIO application entry point
@@ -51,8 +52,8 @@ modules/
 │
 docker-compose.yml   # External dependencies for local development
 grafana-dashboard.json # Example Grafana dashboard for metrics
-
-This structure follows a DDD (Domain Driven Design) modular design and makes it easy to expand functionality.
+```
+This structure follows a Domain-Driven Design (DDD) modular architecture, enabling clean separation of concerns and making it easy to extend the system with new features.
 
 ## 💻 Getting Started with IntelliJ IDEA
 To run this project locally using IntelliJ IDEA (Community Edition is enough),

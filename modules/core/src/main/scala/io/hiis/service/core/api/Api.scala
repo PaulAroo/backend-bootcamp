@@ -9,7 +9,6 @@ import sttp.tapir.json.circe._
 import sttp.tapir.ztapir._
 import sttp.tapir.EndpointOutput
 
-/** Created by Ludovic Temgoua Abanda (icemc) on 19/01/2023 */
 private[api] trait Api extends ApiUtils { self: Logging =>
   import Api.ApiError
   import Api.ApiError._

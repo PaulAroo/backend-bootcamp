@@ -16,8 +16,6 @@ import sttp.tapir.model.ServerRequest
 import sttp.tapir.{ Endpoint, EndpointInput, Tapir }
 import zio.ZIO
 
-/** Created by Ludovic Temgoua Abanda (icemc) on 19/01/2023 */
-
 trait Controller extends Api with Tapir with TapirT { self: Logging =>
   protected def BaseUrl: EndpointInput[Unit] = "api" / "v1"
 
@@ -47,7 +45,7 @@ trait Controller extends Api with Tapir with TapirT { self: Logging =>
     Any
   ] =
     endpoint
-      .securityIn(header[String](authTokenService.header))
+      .securityIn(auth.bearer[String]())
       .securityIn(header[Option[String]](CustomHeaders.REQUEST_ID_HEADER))
       .securityIn(header[Option[String]](CustomHeaders.SESSION_ID_HEADER))
       .securityIn(extractFromRequest(identity))
@@ -122,7 +120,7 @@ trait Controller extends Api with Tapir with TapirT { self: Logging =>
     Any
   ] =
     endpoint
-      .securityIn(header[Option[String]](authTokenService.header))
+      .securityIn(auth.bearer[Option[String]]())
       .securityIn(header[Option[String]](CustomHeaders.REQUEST_ID_HEADER))
       .securityIn(header[Option[String]](CustomHeaders.SESSION_ID_HEADER))
       .securityIn(extractFromRequest(identity))

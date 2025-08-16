@@ -5,8 +5,6 @@ import io.circe.generic.semiauto.{ deriveDecoder, deriveEncoder }
 
 import java.util.UUID
 
-/** Created by Ludovic Temgoua Abanda (icemc) on 17/01/2023 */
-
 final case class RequestId(id: String) extends AnyVal
 
 object RequestId {

@@ -8,7 +8,6 @@ import zio.test.assertTrue
 
 import java.util.UUID
 
-/** Created by Ludovic Temgoua Abanda (icemc) on 20/01/2023 */
 object HealthControllerSpec extends ControllerSpec {
   override def spec = suite("Health Controller Spec")(
     test("health endpoint should respond with OK") {

@@ -9,8 +9,6 @@ import sttp.tapir.server.stub.TapirStubInterpreter
 import zio.{ Task, ZIO }
 import zio.test.ZIOSpecDefault
 
-/** Created by Ludovic Temgoua Abanda (icemc) on 20/01/2023 */
-
 trait ControllerSpec extends ZIOSpecDefault {
   final def backendStub
       : ZIO[Controller, Nothing, SttpBackend[Task, ZioStreams with capabilities.WebSockets]] = {

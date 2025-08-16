@@ -6,8 +6,6 @@ import io.hiis.service.core.api.tapir.TapirT.ServerEndpointT
 import io.hiis.service.core.utils.Logging
 import zio.ZIO
 
-/** Created by Ludovic Temgoua Abanda (icemc) on 19/01/2023 */
-
 object HealthController extends Controller with Logging {
   val healthEndpoint: ServerEndpointT[Any, Any] = SimpleEndpoint().get
     .in("health")

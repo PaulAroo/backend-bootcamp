@@ -1,6 +1,5 @@
 import sbt._
 
-/** Created by Ludovic Temgoua Abanda (icemc) on 19/09/2022 */
 object Dependencies {
 
   private object Versions {

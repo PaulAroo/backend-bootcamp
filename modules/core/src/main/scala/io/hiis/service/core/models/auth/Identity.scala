@@ -11,8 +11,6 @@ import sttp.tapir.{ FieldName, Schema }
 
 import java.net.URI
 
-/** Created by Ludovic Temgoua Abanda (icemc) on 17/01/2023 */
-
 trait Identity {
   def id: UserId
   def phone: Option[PhoneNumber]

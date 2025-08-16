@@ -1,25 +1,26 @@
 package io.hiis.service.auth.api.controllers
 
-import io.circe.generic.auto.{exportDecoder, exportEncoder}
+import io.circe.generic.auto.{ exportDecoder, exportEncoder }
 import io.hiis.service.auth.models.rest.Message
 import io.hiis.service.auth.models.rest.request.ImageRequest
 import io.hiis.service.auth.services.UserService
 import io.hiis.service.core.api.Api.ApiError.notFound
 import io.hiis.service.core.api.Controller
 import io.hiis.service.core.api.tapir.TapirT.ServerEndpointT
-import io.hiis.service.core.models.misc.{FullName, LanguageString}
+import io.hiis.service.core.models.Schemas
+import io.hiis.service.core.models.misc.FullName
 import io.hiis.service.core.services.security.AuthTokenService
 import io.hiis.service.core.utils.Logging
 import sttp.tapir.EndpointInput
 import sttp.tapir.generic.auto.schemaForCaseClass
 import sttp.tapir.json.circe.jsonBody
 
-import java.net.URI
-
 final case class ProfileController(userService: UserService)(implicit
     authTokenService: AuthTokenService
 ) extends Controller
     with Logging {
+
+  import Schemas._ // Import sttpSchema for URL
 
   override protected def BaseUrl: EndpointInput[Unit] = super.BaseUrl / "profile"
 

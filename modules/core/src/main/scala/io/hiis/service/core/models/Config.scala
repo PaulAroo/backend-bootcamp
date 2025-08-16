@@ -1,16 +1,14 @@
 package io.hiis.service.core.models
 
-/** Created by Ludovic Temgoua Abanda (icemc) on 17/01/2023 */
-
 object Config {
 
   final case class MongodbConfig(uri: String, database: String)
 
   final case class AuthConfig(
-      key: String,
-      authTokenHeader: String,
+      authTokenKey: String,
       authTokenMaxAge: Long,
-      refreshTokenHeader: String
+      refreshTokenKey: String,
+      refreshTokenMaxAge: Long
   )
 
   final case class AppServerConfig(host: String, port: Int, serviceURL: Option[String] = None)

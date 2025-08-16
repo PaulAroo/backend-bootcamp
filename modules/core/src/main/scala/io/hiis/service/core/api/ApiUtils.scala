@@ -7,8 +7,6 @@ import zio.{ IO, ZIO }
 
 import scala.reflect.runtime.universe.TypeTag
 
-/** Created by Ludovic Temgoua Abanda (icemc) on 19/01/2023 */
-
 trait ApiUtils { self: Logging =>
 
   type ApiTask[T] = IO[ApiError, T]

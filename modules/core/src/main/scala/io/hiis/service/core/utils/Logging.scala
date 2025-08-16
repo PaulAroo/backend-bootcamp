@@ -14,8 +14,6 @@ import zio.logging.backend.SLF4J
 import zio.logging.{ LogAnnotation, LogFormat }
 import zio.{ Runtime, ZIO }
 
-/** Created by Ludovic Temgoua Abanda (icemc) on 17/10/2022 */
-
 trait Logging {
 
   private val loggerName: String = s"${this.getClass.getName}"

@@ -5,19 +5,15 @@ import io.circe.{ Decoder, Encoder }
 import io.hiis.service.core.models.auth.JwtToken
 import pdi.jwt.algorithms.JwtHmacAlgorithm
 import pdi.jwt.{ Jwt, JwtCirce, JwtClaim }
-import zio.{ UIO, ZIO }
+import zio.{ Task, UIO, ZIO }
 
 import java.time.Instant
 
-/** Created by Ludovic Temgoua Abanda (icemc) on 27/10/2022 */
-
-private[security] trait JwtService[C] {
+trait JwtService[C] {
 
   protected def key: String
 
   def maxAge: Long
-
-  def header: String
 
   protected def algorithm: JwtHmacAlgorithm
 
@@ -81,6 +77,25 @@ private[security] trait JwtService[C] {
       .toOption
       .exists(claim => Instant.ofEpochMilli(claim.expiration.get).isAfter(Instant.now()))
   )
+
+  /**
+   * Tries to get the body of a jwt token if possible
+   *
+   * @param token
+   *   the jwt token
+   * @param decoder
+   *   the json decoder of the body
+   * @return
+   *   effect with body if available
+   */
+  def validate(token: String)(implicit decoder: Decoder[C]): Task[C] =
+    Jwt
+      .decode(token, key, Seq(algorithm))
+      .toOption match {
+      case Some(value) if Instant.ofEpochMilli(value.expiration.get).isAfter(Instant.now) =>
+        ZIO.fromEither(io.circe.parser.decode[C](value.content))
+      case _ => ZIO.fail(new Throwable("Unable to decode JWT"))
+    }
 
   /**
    * Tries to get the body of a jwt token if possible

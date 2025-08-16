@@ -1,7 +1,7 @@
 package io.hiis.service.auth
 
-import io.hiis.service.auth.api.controllers.{ AccountVerificationController, SignupController }
-import io.hiis.service.auth.services.{ PasswordService, TotpService, UserService }
+import io.hiis.service.auth.api.controllers.{AccountVerificationController, ProfileController, SignupController}
+import io.hiis.service.auth.services.{PasswordService, TotpService, UserService}
 import io.hiis.service.core.api.ModuleEndpoints
 import io.hiis.service.core.api.tapir.TapirT.ServerEndpointT
 import io.hiis.service.core.services.security.AuthTokenService
@@ -35,6 +35,7 @@ object AuthMain
     authTokenService    <- ZIO.service[AuthTokenService]
   } yield ModuleEndpoints.fromControllers(
     SignupController(userService, passwordService, totpService, notificationService),
-    AccountVerificationController(totpService, userService, authTokenService, notificationService)
+    AccountVerificationController(totpService, userService, authTokenService, notificationService),
+    ProfileController(userService)(authTokenService)
   )
 }

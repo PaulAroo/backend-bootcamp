@@ -1,4 +1,4 @@
-package io.hiis.service.auth.models.rest.request
+package io.hiis.service.auth.models.rest
 
 import io.hiis.service.core.models.misc.Email
 

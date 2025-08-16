@@ -2,7 +2,7 @@ package io.hiis.service.auth.api.controllers
 
 import io.circe.generic.auto.{ exportDecoder, exportEncoder }
 import io.hiis.service.auth.models.Totp
-import io.hiis.service.auth.models.rest.request.Identifier
+import io.hiis.service.auth.models.rest.Identifier
 import io.hiis.service.auth.models.rest.response.{ LoginResponse, Token }
 import io.hiis.service.auth.models.security.TokenActions
 import io.hiis.service.auth.services.{ TotpService, UserService }

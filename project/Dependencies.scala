@@ -17,6 +17,7 @@ object Dependencies {
     val reactivemongo           = "1.1.0-RC6"
     val sttpAuth                = "0.18.0"
     val pbkdf2                  = "0.7.2"
+    val bcrypt                  = "4.3.0"
     val jwtCirce                = "10.0.4"
     val organizeImportsVersion  = "0.6.0"
     val tapir                   = "1.11.14"
@@ -36,7 +37,10 @@ object Dependencies {
     val jsonSchemaCirce         = "0.11.7"
     val scalatest               = "3.2.19"
     val apacheCommons           = "1.17.0"
-
+    val googlePhoneNumber       = "8.13.42"
+    val apacheCommonValidator   = "1.8.0"
+    val resend                  = "3.1.0"
+    val twilio                  = "10.6.8"
   }
 
   object Libraries {
@@ -117,12 +121,25 @@ object Dependencies {
       "com.github.jwt-scala" %% "jwt-circe"       % jwtCirce,
       "com.ocadotechnology"  %% "sttp-oauth2"     % sttpAuth,
       "io.github.nremond"    %% "pbkdf2-scala"    % pbkdf2,
+      "com.github.t3hnar"    %% "scala-bcrypt"    % bcrypt,
       "com.nimbusds"          % "nimbus-jose-jwt" % nimbusJose
     )
 
     val apache = Seq(
-      "commons-codec" % "commons-codec" % apacheCommons
+      "commons-codec"     % "commons-codec"     % apacheCommons,
+      "commons-validator" % "commons-validator" % Versions.apacheCommonValidator
     )
+
+    val googlePhoneNumber = Seq(
+      "com.googlecode.libphonenumber" % "libphonenumber" % Versions.googlePhoneNumber
+    )
+
+    val mail = Seq(
+      "org.apache.commons" % "commons-email" % "1.5",
+      "com.resend"         % "resend-java"   % Versions.resend
+    )
+
+    val twillo = Seq("com.twilio.sdk" % "twilio" % twilio)
 
     val compilerPlugins = Seq(
       compilerPlugin(

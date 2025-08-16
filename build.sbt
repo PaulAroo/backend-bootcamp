@@ -23,6 +23,7 @@ lazy val root = project
   .disablePlugins(sbtassembly.AssemblyPlugin)
   .aggregate(
     core,
+    notification,
     application,
     authentication,
     gallery,
@@ -45,8 +46,26 @@ lazy val core = project
     name := "core",
     TwirlKeys.templateImports += "io.hiis._",
     libraryDependencies ++=
-      zio ++ metrics ++ cats ++ json ++ logging ++ apache ++ tapir ++ auth ++ zioConfig ++ mongodb ++ redis ++ tests // Add all common library dependencies here. Have a look at Dependencies object
+      zio ++ metrics ++ cats ++ json ++ logging ++ apache ++ tapir ++ auth ++ mail ++ twillo ++ googlePhoneNumber ++ zioConfig ++ mongodb ++ redis ++ tests // Add all common library dependencies here. Have a look at Dependencies object
   )
+
+lazy val notification = project
+  .in(file("modules/notification"))
+  .enablePlugins(BuildInfoPlugin, SbtTwirl)
+  .settings(
+    compilerPlugins.flatMap(addCompilerPlugin),
+    commonSettings ++ coverageSettings ++ testSettings,
+    consoleSettings,
+    buildInfo,
+    buildInfoOps,
+    name    := "notification",
+    version := sys.env.getOrElse("VERSION", applicationVersion),
+    assemblySettings,
+    TwirlKeys.templateImports += "io.hiis._",
+    libraryDependencies ++=
+      tests.map(_.exclude("org.slf4j", "*"))
+  )
+  .dependsOn(core)
 
 lazy val authentication = project
   .in(file("modules/auth"))
@@ -64,7 +83,7 @@ lazy val authentication = project
     libraryDependencies ++=
       tests.map(_.exclude("org.slf4j", "*"))
   )
-  .dependsOn(core)
+  .dependsOn(core, notification)
 
 lazy val gallery = project
   .in(file("modules/gallery"))
@@ -154,7 +173,7 @@ lazy val application = project
     libraryDependencies ++=
       tests.map(_.exclude("org.slf4j", "*"))
   )
-  .dependsOn(core)
+  .dependsOn(core, authentication)
 
 lazy val it = (project in file("modules/it"))
   .disablePlugins(sbtassembly.AssemblyPlugin)
@@ -166,7 +185,7 @@ lazy val it = (project in file("modules/it"))
     version := sys.env.getOrElse("VERSION", applicationVersion),
     libraryDependencies ++= tests
   )
-  .dependsOn(core, application)
+  .dependsOn(core, authentication, application)
 
 lazy val commonSettings = Seq(
   scalafmtOnCompile := true,

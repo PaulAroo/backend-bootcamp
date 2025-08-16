@@ -11,11 +11,9 @@ import io.hiis.service.core.models.Config.AppServerConfig
 import io.hiis.service.core.models.Constants.CustomHeaders.{
   REQUEST_ID_HEADER,
   REQUEST_TIME_STAMP_HEADER,
-  SESSION_ID_HEADER,
-  USER_ID_HEADER
+  SESSION_ID_HEADER
 }
 import io.hiis.service.core.models.auth
-import io.hiis.service.core.models.auth.Identity.StringToUserId
 import io.hiis.service.core.models.auth.RequestId.{ DUMMY_REQUEST_ID, ToRequest }
 import io.hiis.service.core.models.auth.{ Identity, UserAwareRequest }
 import io.hiis.service.core.utils.Logging
@@ -29,15 +27,8 @@ import sttp.monad.MonadError
 import sttp.tapir.docs.openapi.OpenAPIDocsOptions
 import sttp.tapir.model.ServerRequest
 import sttp.tapir.server.interceptor.RequestInterceptor.RequestResultTransform
+import sttp.tapir.server.interceptor.cors.CORSConfig._
 import sttp.tapir.server.interceptor.cors.{ CORSConfig, CORSInterceptor }
-import sttp.tapir.server.interceptor.cors.CORSConfig.{
-  AllowedCredentials,
-  AllowedHeaders,
-  AllowedMethods,
-  AllowedOrigin,
-  ExposedHeaders,
-  MaxAge
-}
 import sttp.tapir.server.interceptor.decodefailure.DefaultDecodeFailureHandler
 import sttp.tapir.server.interceptor.decodefailure.DefaultDecodeFailureHandler.FailureMessages
 import sttp.tapir.server.interceptor.reject.{ RejectContext, RejectHandler }
@@ -75,6 +66,9 @@ trait ApiGatewayT extends Interceptors {
   private val excludedEndUserSwaggerEndpoint =
     SwaggerInterpreter(
       openAPIInterpreterOptions = OpenAPIDocsOptions.default,
+      customiseDocsModel = _.copy(servers =
+        List(OpenApiServer(config.serviceURL.getOrElse(s"${config.host}:${config.port}")))
+      ),
       swaggerUIOptions = SwaggerUIOptions.default
         .copy(pathPrefix = List("docs-excluded"), yamlName = "docs.yaml"),
       addServerWhenContextPathPresent = true
@@ -104,10 +98,12 @@ trait ApiGatewayT extends Interceptors {
         .options
     ).toHttp(
       allEndpoints
+        ++ Seq(
+          DocsEndpoint.get("docs", "swagger/docs.yaml"),
+          DocsEndpoint.get("docs-excluded", "docs-excluded/docs.yaml")
+        )
         ++ endUserSwaggerEndpoint
         ++ excludedEndUserSwaggerEndpoint
-        :+ DocsEndpoint.get("docs", "swagger/docs.yaml")
-        :+ DocsEndpoint.get("docs-excluded", "docs-excluded/docs.yaml")
     )
 
   def start = for {
@@ -194,9 +190,7 @@ trait Interceptors {
                     }
                     implicit0(_request: UserAwareRequest[Identity]) <- ZIO.succeed(
                       UserAwareRequest[Identity](
-                        request
-                          .header(USER_ID_HEADER)
-                          .map(_.toIdentity),
+                        None,
                         request
                           .header(REQUEST_ID_HEADER)
                           .map(_.toRequestId)
@@ -257,9 +251,7 @@ trait Interceptors {
 
                     implicit0(_request: UserAwareRequest[Identity]) <- ZIO.succeed(
                       UserAwareRequest[Identity](
-                        request
-                          .header(USER_ID_HEADER)
-                          .map(_.toIdentity),
+                        None,
                         request
                           .header(REQUEST_ID_HEADER)
                           .map(_.toRequestId)
@@ -335,12 +327,11 @@ trait Interceptors {
         headers       = request.headers.toList
         requestId     = request.header(REQUEST_ID_HEADER).getOrElse(DUMMY_REQUEST_ID)
         sessionId     = request.header(SESSION_ID_HEADER)
-        userId        = request.header(USER_ID_HEADER)
         url           = request.uri.toJavaUri.toString.stripSuffix("/")
         method        = request.method.method
         remoteAddress = zioHttpRequest.remoteAddress.map(_.toString)
         _request = auth.UserAwareRequest(
-          userId.map(_.toIdentity),
+          None,
           requestId.toRequestId,
           url,
           method,
@@ -443,9 +434,7 @@ trait Interceptors {
           (for {
             implicit0(request: UserAwareRequest[Identity]) <- ZIO.succeed(
               auth.UserAwareRequest(
-                ctx.request
-                  .header(USER_ID_HEADER)
-                  .map(_.toIdentity),
+                None,
                 ctx.request
                   .header(REQUEST_ID_HEADER)
                   .map(_.toRequestId)

@@ -1,6 +1,9 @@
 package io.hiis.service.core.models
 
+import io.hiis.service.core.models.misc.Email
+
 object Constants {
+  val ORG_EMAIL = Email("noreply@hiis.io")
   object CustomHeaders {
     val REQUEST_ID_HEADER         = "X-REQUEST-ID".toLowerCase
     val SESSION_ID_HEADER         = "X-SESSION-ID".toLowerCase

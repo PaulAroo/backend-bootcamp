@@ -4,7 +4,7 @@ import io.hiis.service.core.api.tapir.TapirT.ServerEndpointT
 import zio.ZIO
 
 trait ModuleEndpoints[R] {
-  def endpoints: ZIO[R, Throwable, List[ServerEndpointT[Any, Any]]] = ZIO.succeed(List.empty)
+  def endpoints: ZIO[R, Throwable, List[ServerEndpointT[Any, Any]]]
 }
 
 object ModuleEndpoints {

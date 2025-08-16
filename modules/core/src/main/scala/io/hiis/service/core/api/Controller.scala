@@ -7,13 +7,8 @@ import io.hiis.service.core.api.Api.ApiError.{ unauthorized, Unauthorized }
 import io.hiis.service.core.api.tapir.{ PartialServerEndpointT, TapirT }
 import io.hiis.service.core.api.tapir.TapirT.ServerEndpointT
 import io.hiis.service.core.models.Constants.CustomHeaders
-import io.hiis.service.core.models.Constants.CustomHeaders.{
-  REQUEST_ID_HEADER,
-  SESSION_ID_HEADER,
-  USER_ID_HEADER
-}
-import io.hiis.service.core.models.auth.Identity.StringToUserId
-import io.hiis.service.core.models.auth.RequestId.ToRequest
+import io.hiis.service.core.models.Constants.CustomHeaders.{ REQUEST_ID_HEADER, SESSION_ID_HEADER }
+import io.hiis.service.core.models.auth.RequestId.{ DUMMY_REQUEST_ID, ToRequest }
 import io.hiis.service.core.models.auth._
 import io.hiis.service.core.services.security.AuthTokenService
 import io.hiis.service.core.utils.Logging
@@ -44,7 +39,7 @@ trait Controller extends Api with Tapir with TapirT { self: Logging =>
       authTokenService: AuthTokenService
   ): PartialServerEndpointT[
     Any,
-    (String, String, String, ServerRequest),
+    (String, Option[String], Option[String], ServerRequest),
     SecuredRequest[Identity],
     Unit,
     ApiError,
@@ -53,8 +48,8 @@ trait Controller extends Api with Tapir with TapirT { self: Logging =>
   ] =
     endpoint
       .securityIn(header[String](authTokenService.header))
-      .securityIn(header[String](CustomHeaders.REQUEST_ID_HEADER))
-      .securityIn(header[String](CustomHeaders.SESSION_ID_HEADER))
+      .securityIn(header[Option[String]](CustomHeaders.REQUEST_ID_HEADER))
+      .securityIn(header[Option[String]](CustomHeaders.SESSION_ID_HEADER))
       .securityIn(extractFromRequest(identity))
       .errorOut(ExtraErrors(otherErrors.+:(unauthorized): _*))
       .prependIn(BaseUrl)
@@ -77,10 +72,6 @@ trait Controller extends Api with Tapir with TapirT { self: Logging =>
                   Json
                     .obj(
                       "type" -> Json.fromString("api-gateway-request-error"),
-                      "userId" -> request
-                        .header(USER_ID_HEADER)
-                        .map(_.toIdentity.id.asJson)
-                        .getOrElse(Json.Null),
                       "requestId" -> request
                         .header(REQUEST_ID_HEADER)
                         .map(_.toRequestId.id.asJson)
@@ -100,11 +91,11 @@ trait Controller extends Api with Tapir with TapirT { self: Logging =>
             }
         } yield SecuredRequest(
           identity,
-          RequestId(input._2),
+          RequestId(input._2.getOrElse(DUMMY_REQUEST_ID)),
           request.uri.toJavaUri.toString,
           request.method.method,
           input._4.headers.toList,
-          Some(input._3.toRequestId)
+          Some(input._3.getOrElse(DUMMY_REQUEST_ID).toRequestId)
         )
       }
 
@@ -123,7 +114,7 @@ trait Controller extends Api with Tapir with TapirT { self: Logging =>
       authTokenService: AuthTokenService
   ): PartialServerEndpointT[
     Any,
-    (Option[String], String, Option[String], ServerRequest),
+    (Option[String], Option[String], Option[String], ServerRequest),
     UserAwareRequest[Identity],
     Unit,
     ApiError,
@@ -132,7 +123,7 @@ trait Controller extends Api with Tapir with TapirT { self: Logging =>
   ] =
     endpoint
       .securityIn(header[Option[String]](authTokenService.header))
-      .securityIn(header[String](CustomHeaders.REQUEST_ID_HEADER))
+      .securityIn(header[Option[String]](CustomHeaders.REQUEST_ID_HEADER))
       .securityIn(header[Option[String]](CustomHeaders.SESSION_ID_HEADER))
       .securityIn(extractFromRequest(identity))
       .errorOut(ExtraErrors(otherErrors: _*))
@@ -147,7 +138,7 @@ trait Controller extends Api with Tapir with TapirT { self: Logging =>
           _method <- ZIO.succeed(input._4.method.method)
         } yield UserAwareRequest(
           identity,
-          input._2.toRequestId,
+          input._2.getOrElse(DUMMY_REQUEST_ID).toRequestId,
           _path,
           _method,
           input._4.headers.toList,

@@ -20,7 +20,10 @@ import zio.metrics.connectors.{ prometheus, MetricsConfig }
 import zio.metrics.jvm.DefaultJvmMetrics
 
 import java.net.http.HttpClient
-
+import io.hiis.service.auth.AuthMain
+import io.hiis.service.auth.services.{ PasswordService, TotpService, UserService }
+import io.hiis.service.core.services.security.AuthTokenService
+import io.hiis.service.notification.services.NotificationService
 object Application extends ZIOAppDefault with Logging {
 
   object UtilityEndpoints extends ModuleEndpoints[MetricsService] {
@@ -35,7 +38,6 @@ object Application extends ZIOAppDefault with Logging {
         MetricsController(metricsService)
       )
     }
-
   }
 
   val mongodbClient: ZLayer[Any, Throwable, ZMongoClient] = AppConfig.appConfig.flatMap(layer =>
@@ -51,22 +53,41 @@ object Application extends ZIOAppDefault with Logging {
       )
     )
 
-  val gatewayApp = for {
+  val gatewayApp: ZIO[
+    AuthTokenService
+      with NotificationService
+      with TotpService
+      with PasswordService
+      with UserService
+      with MetricsService
+      with AppServerConfig,
+    Throwable,
+    Unit
+  ] = for {
     appConfig     <- ZIO.service[AppServerConfig]
     utilityRoutes <- UtilityEndpoints.endpoints
+    authRoutes    <- AuthMain.endpoints
     _ <- (ZIO
       .service[ApiGateway]
       .flatMap(_.start) <& logInfo(
       s"Started ${BuildInfo.name} API Gateway Server"
     ))
       .provide(
-        ApiGateway.live(appConfig, utilityRoutes)
+        ApiGateway.live(appConfig, utilityRoutes, authRoutes)
       )
   } yield ()
 
   override def run: ZIO[Any with ZIOAppArgs with Scope, Any, Any] =
     gatewayApp.provide(
       AppConfig.live,
+
+      // Provide services for auth routes
+
+      AuthTokenService.live,
+      NotificationService.live,
+      TotpService.live,
+      PasswordService.live,
+      UserService.live,
 
       // Metrics ZLayers
       ZLayer.succeed(MetricsConfig(15.seconds)),
@@ -76,6 +97,9 @@ object Application extends ZIOAppDefault with Logging {
       // Enable the ZIO internal metrics and the default JVM metricsConfig
       Runtime.enableRuntimeMetrics,
       DefaultJvmMetrics.live.unit,
-      MetricsService.live
+      MetricsService.live,
+
+      // Mongodb client
+      mongodbClient
     )
 }

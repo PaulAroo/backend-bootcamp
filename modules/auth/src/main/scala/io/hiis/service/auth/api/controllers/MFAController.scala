@@ -12,7 +12,7 @@ import io.hiis.service.core.api.tapir.TapirT.ServerEndpointT
 import io.hiis.service.core.models.Constants
 import io.hiis.service.core.models.misc.Notification.EmailNotification
 import io.hiis.service.core.services.security.AuthTokenService
-import io.hiis.service.core.utils.Logging
+import io.hiis.service.core.utils.{ Logging, SilentLogging }
 import io.hiis.service.notification.services.NotificationService
 import sttp.tapir.EndpointInput
 import sttp.tapir.generic.auto._
@@ -28,7 +28,7 @@ final case class MFAController(
     refreshTokenService: RefreshTokenService,
     notificationService: NotificationService
 ) extends Controller
-    with Logging {
+    with SilentLogging {
   override protected def BaseUrl: EndpointInput[Unit] = super.BaseUrl / "auth"
 
   private val verifyAccount: ServerEndpointT[Any, Any] = UnsecuredEndpoint().get

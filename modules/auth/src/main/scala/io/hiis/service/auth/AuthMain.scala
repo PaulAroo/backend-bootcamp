@@ -2,6 +2,7 @@ package io.hiis.service.auth
 
 import io.hiis.service.auth.api.controllers.{
   AccountVerificationController,
+  LogoutController,
   NoMFASigninController,
   ProfileController,
   SignupController
@@ -47,6 +48,8 @@ object AuthMain
     authTokenService    <- ZIO.service[AuthTokenService]
     refreshTokenService <- ZIO.service[RefreshTokenService]
   } yield ModuleEndpoints.fromControllers(
+    LogoutController(refreshTokenService)(authTokenService),
+    NoMFASigninController(userService, passwordService, refreshTokenService)(authTokenService),
     SignupController(userService, passwordService, totpService, notificationService),
     AccountVerificationController(
       totpService,
@@ -55,7 +58,6 @@ object AuthMain
       refreshTokenService,
       notificationService
     ),
-    ProfileController(userService)(authTokenService),
-    NoMFASigninController(userService, passwordService, refreshTokenService)(authTokenService)
+    ProfileController(userService)(authTokenService)
   )
 }

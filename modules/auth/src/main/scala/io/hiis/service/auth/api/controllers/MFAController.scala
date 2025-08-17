@@ -15,13 +15,13 @@ import io.hiis.service.core.services.security.AuthTokenService
 import io.hiis.service.core.utils.Logging
 import io.hiis.service.notification.services.NotificationService
 import sttp.tapir.EndpointInput
-import sttp.tapir.generic.auto.schemaForCaseClass
+import sttp.tapir.generic.auto._
 import sttp.tapir.json.circe.jsonBody
 import zio.ZIO
 
 import java.time.Instant
 
-final case class AccountVerificationController(
+final case class MFAController(
     totpService: TotpService,
     userService: UserService,
     authTokenService: AuthTokenService,
@@ -29,23 +29,22 @@ final case class AccountVerificationController(
     notificationService: NotificationService
 ) extends Controller
     with Logging {
-
   override protected def BaseUrl: EndpointInput[Unit] = super.BaseUrl / "auth"
 
   private val verifyAccount: ServerEndpointT[Any, Any] = UnsecuredEndpoint().get
-    .in("account" / "verification")
-    .in(query[Int]("otp"))
+    .in("two-factor" / "verification")
+    .in(query[Int]("code"))
     .in(query[String]("token"))
     .out(jsonBody[LoginResponse])
-    .name(s"verify account")
-    .summary(s"verify  account")
-    .description(s"Verify account using secret and OTP")
+    .name(s" 2FA verification")
+    .summary(s" 2FA verification")
+    .description(s" 2FA verification using secret and OTP")
     .serverLogic { request => value =>
-      val (otp, token) = value
+      val (code, token) = value
       (totpService
-        .validate(Totp(otp.toString, token)) <*> totpService.find(token))
+        .validate(Totp(code.toString, token)) <*> totpService.find(token))
         .flatMap {
-          case (true, Some(totp)) if totp.action == TokenActions.ACCOUNT_VERIFICATION =>
+          case (true, Some(totp)) if totp.action == TokenActions.TWO_FACTOR_AUTHENTICATION =>
             for {
               user <- userService.get(totp.user).flatMap {
                 case Some(value) => ZIO.succeed(value)
@@ -58,26 +57,26 @@ final case class AccountVerificationController(
 
               _            <- totpService.remove(token)
               jwt          <- authTokenService.create(user)
-              refreshToken <- refreshTokenService.create(user.id)
+              refreshToken <- refreshTokenService.create(totp.user)
             } yield LoginResponse(user, jwt, refreshToken)
           case _ => ZIO.fail(BadRequest("Failed to validate otp"))
         }
     }
 
   private val resendVerification: ServerEndpointT[Any, Any] = UnsecuredEndpoint().post
-    .in("account" / "verification" / "resend")
+    .in("two-factor" / "verification" / "resend")
     .in(jsonBody[Identifier])
     .out(jsonBody[Token])
-    .name(s"resend  verification code")
-    .summary(s"resend verification code")
-    .description(s"Resend  verification code to phone number")
+    .name(s"resend  2FA verification code")
+    .summary(s"resend  2FA verification code")
+    .description(s"Resend  2FA verification code to phone number or email")
     .serverLogic { request => identifier =>
       userService
         .getByEmail(identifier.email)
         .flatMap {
-          case Some(user) if !user.isActivated =>
+          case Some(user) =>
             totpService
-              .createTotpToken(user, TokenActions.ACCOUNT_VERIFICATION)
+              .createTotpToken(user, TokenActions.TWO_FACTOR_AUTHENTICATION)
               .tap(totp =>
                 notificationService
                   .sendEmail(
@@ -85,7 +84,7 @@ final case class AccountVerificationController(
                       Constants.ORG_EMAIL,
                       user.email,
                       "Your OTP",
-                      txt.otp(otp = totp.otp).body
+                      txt.otp(totp.otp).body
                     )
                   )
                   .ignoreLogged
@@ -98,5 +97,5 @@ final case class AccountVerificationController(
   override def endpoints: List[ServerEndpointT[Any, Any]] =
     List(verifyAccount, resendVerification)
 
-  override def tag: String = "Account Verification"
+  override def tag: String = "Multi-Factor Authentication"
 }

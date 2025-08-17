@@ -4,5 +4,6 @@ import io.hiis.service.core.models.auth.{ JwtToken, SimpleIdentity }
 
 final case class LoginResponse(
     user: SimpleIdentity,
-    authToken: JwtToken
+    authToken: JwtToken,
+    refreshToken: String
 )

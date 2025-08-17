@@ -21,7 +21,12 @@ import zio.metrics.jvm.DefaultJvmMetrics
 
 import java.net.http.HttpClient
 import io.hiis.service.auth.AuthMain
-import io.hiis.service.auth.services.{ PasswordService, TotpService, UserService }
+import io.hiis.service.auth.services.{
+  PasswordService,
+  RefreshTokenService,
+  TotpService,
+  UserService
+}
 import io.hiis.service.core.services.security.AuthTokenService
 import io.hiis.service.notification.services.NotificationService
 object Application extends ZIOAppDefault with Logging {
@@ -59,6 +64,7 @@ object Application extends ZIOAppDefault with Logging {
       with TotpService
       with PasswordService
       with UserService
+      with RefreshTokenService
       with MetricsService
       with AppServerConfig,
     Throwable,
@@ -70,7 +76,7 @@ object Application extends ZIOAppDefault with Logging {
     _ <- (ZIO
       .service[ApiGateway]
       .flatMap(_.start) <& logInfo(
-      s"Started ${BuildInfo.name} API Gateway Server"
+      s"Started ${BuildInfo.name} API Gateway Server on port:${appConfig.port}"
     ))
       .provide(
         ApiGateway.live(appConfig, utilityRoutes, authRoutes)
@@ -88,6 +94,7 @@ object Application extends ZIOAppDefault with Logging {
       TotpService.live,
       PasswordService.live,
       UserService.live,
+      RefreshTokenService.live,
 
       // Metrics ZLayers
       ZLayer.succeed(MetricsConfig(15.seconds)),

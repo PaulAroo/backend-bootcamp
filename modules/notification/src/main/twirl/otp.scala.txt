@@ -1,4 +1,4 @@
 @(otp: String)
 Your <App name> OTP is: @otp
 Don't share this code with others.
-<App name> is not liable from incidents that results from sharing our OTP.
+<App name> is not liable for incidents that results from sharing your OTP.

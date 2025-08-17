@@ -2,10 +2,16 @@ package io.hiis.service.auth
 
 import io.hiis.service.auth.api.controllers.{
   AccountVerificationController,
+  NoMFASigninController,
   ProfileController,
   SignupController
 }
-import io.hiis.service.auth.services.{ PasswordService, TotpService, UserService }
+import io.hiis.service.auth.services.{
+  PasswordService,
+  RefreshTokenService,
+  TotpService,
+  UserService
+}
 import io.hiis.service.core.api.ModuleEndpoints
 import io.hiis.service.core.api.tapir.TapirT.ServerEndpointT
 import io.hiis.service.core.services.security.AuthTokenService
@@ -21,6 +27,7 @@ object AuthMain
         with TotpService
         with PasswordService
         with UserService
+        with RefreshTokenService
     ] {
 
   override def endpoints: ZIO[
@@ -28,7 +35,8 @@ object AuthMain
       with NotificationService
       with TotpService
       with PasswordService
-      with UserService,
+      with UserService
+      with RefreshTokenService,
     Nothing,
     List[ServerEndpointT[Any, Any]]
   ] = for {
@@ -37,9 +45,17 @@ object AuthMain
     totpService         <- ZIO.service[TotpService]
     notificationService <- ZIO.service[NotificationService]
     authTokenService    <- ZIO.service[AuthTokenService]
+    refreshTokenService <- ZIO.service[RefreshTokenService]
   } yield ModuleEndpoints.fromControllers(
     SignupController(userService, passwordService, totpService, notificationService),
-    AccountVerificationController(totpService, userService, authTokenService, notificationService),
-    ProfileController(userService)(authTokenService)
+    AccountVerificationController(
+      totpService,
+      userService,
+      authTokenService,
+      refreshTokenService,
+      notificationService
+    ),
+    ProfileController(userService)(authTokenService),
+    NoMFASigninController(userService, passwordService, refreshTokenService)(authTokenService)
   )
 }

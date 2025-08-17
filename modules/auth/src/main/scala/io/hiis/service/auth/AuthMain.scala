@@ -4,6 +4,7 @@ import io.hiis.service.auth.api.controllers.{
   AccountVerificationController,
   LogoutController,
   NoMFASigninController,
+  PasswordController,
   ProfileController,
   RefreshTokenController,
   SignupController
@@ -60,6 +61,13 @@ object AuthMain
       refreshTokenService,
       notificationService
     ),
+    PasswordController(
+      totpService,
+      userService,
+      passwordService,
+      refreshTokenService,
+      notificationService
+    )(authTokenService),
     ProfileController(userService)(authTokenService)
   )
 }

@@ -15,12 +15,12 @@ import io.hiis.service.auth.services.{
   TotpService,
   UserService
 }
-import io.hiis.service.core.api.ModuleEndpoints
+import io.hiis.service.core.api.{ ModuleApp, ModuleEndpoints }
 import io.hiis.service.core.api.tapir.TapirT.ServerEndpointT
 import io.hiis.service.core.services.security.AuthTokenService
 import io.hiis.service.core.utils.Logging
 import io.hiis.service.notification.services.NotificationService
-import zio.ZIO
+import zio.{ durationInt, Schedule, ZIO }
 
 object AuthMain
     extends Logging
@@ -31,7 +31,8 @@ object AuthMain
         with PasswordService
         with UserService
         with RefreshTokenService
-    ] {
+    ]
+    with ModuleApp[RefreshTokenService with TotpService] {
 
   override def endpoints: ZIO[
     AuthTokenService
@@ -70,4 +71,15 @@ object AuthMain
     )(authTokenService),
     ProfileController(userService)(authTokenService)
   )
+
+  override def app: ZIO[RefreshTokenService with TotpService, Throwable, Any] = {
+    // Expired totp token cleanup job
+    ZIO
+      .service[TotpService]
+      .flatMap(_.removeExpired().repeat(Schedule.fixed(10.minutes))) <&
+      // Expired refresh token cleanup job
+      ZIO
+        .service[RefreshTokenService]
+        .flatMap(_.removeExpired().repeat(Schedule.fixed(1.hour)))
+  }
 }

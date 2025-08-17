@@ -31,7 +31,7 @@ import io.hiis.service.core.services.security.AuthTokenService
 import io.hiis.service.notification.services.NotificationService
 object Application extends ZIOAppDefault with Logging {
 
-  object UtilityEndpoints extends ModuleEndpoints[MetricsService] {
+  private object UtilityEndpoints extends ModuleEndpoints[MetricsService] {
     override def endpoints: ZIO[MetricsService, Throwable, List[ServerEndpointT[Any, Any]]] = {
       for {
         metricsService <- ZIO.service[MetricsService]
@@ -84,11 +84,10 @@ object Application extends ZIOAppDefault with Logging {
   } yield ()
 
   override def run: ZIO[Any with ZIOAppArgs with Scope, Any, Any] =
-    gatewayApp.provide(
+    (gatewayApp <&> AuthMain.app).provide(
       AppConfig.live,
 
       // Provide services for auth routes
-
       AuthTokenService.live,
       NotificationService.live,
       TotpService.live,

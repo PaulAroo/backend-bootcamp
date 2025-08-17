@@ -8,7 +8,7 @@ import io.hiis.service.core.api.Api.ApiError.{ forbidden, BadRequest, Forbidden 
 import io.hiis.service.core.api.Controller
 import io.hiis.service.core.api.tapir.TapirT.ServerEndpointT
 import io.hiis.service.core.services.security.AuthTokenService
-import io.hiis.service.core.utils.{ Logging, SilentLogging }
+import io.hiis.service.core.utils.SilentLogging
 import sttp.tapir.EndpointInput
 import sttp.tapir.generic.auto._
 import sttp.tapir.json.circe._
